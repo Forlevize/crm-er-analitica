@@ -39,10 +39,10 @@ export function ResetPassword() {
       setIsSubmitting(true);
       await updatePassword(values.password);
       await signOut();
-      toast.success("Senha redefinida com sucesso. Faça login com a nova senha.");
+      toast.success("Senha salva com sucesso. Faca login com a nova senha.");
       navigate("/login", { replace: true });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao redefinir senha.");
+      toast.error(error instanceof Error ? error.message : "Falha ao salvar senha.");
     } finally {
       setIsSubmitting(false);
     }
@@ -64,15 +64,17 @@ export function ResetPassword() {
               <LockKeyhole className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-marine">Redefinicao de senha</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-marine">
+                Configuracao de acesso
+              </p>
               <h1 className="mt-1 text-[34px] font-semibold leading-none tracking-[-0.06em] text-textPrimary">
-                Criar nova senha
+                Criar ou redefinir senha
               </h1>
             </div>
           </div>
 
           <p className="mt-4 text-[15px] leading-7 text-textSecondary">
-            Defina uma nova senha para continuar acessando a plataforma com seguranca.
+            Defina sua senha para concluir o acesso a plataforma com seguranca.
           </p>
 
           <form className="mt-8 space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
@@ -93,7 +95,7 @@ export function ResetPassword() {
 
             <div className="pt-2">
               <Button type="submit" className="w-full justify-between" disabled={isSubmitting || isLoading}>
-                <span>{isSubmitting ? "Salvando..." : "Salvar nova senha"}</span>
+                <span>{isSubmitting ? "Salvando..." : "Salvar senha"}</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>

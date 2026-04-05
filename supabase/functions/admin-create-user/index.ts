@@ -79,7 +79,7 @@ Deno.serve(async (request) => {
       data: {
         full_name: body.fullName,
       },
-      redirectTo: `${Deno.env.get("APP_URL") ?? ""}/login`,
+      redirectTo: `${Deno.env.get("APP_URL") ?? ""}/redefinir-senha`,
     });
 
     if (!invite.error && invite.data.user) {
@@ -108,7 +108,7 @@ Deno.serve(async (request) => {
         type: "recovery",
         email: body.email,
         options: {
-          redirectTo: `${Deno.env.get("APP_URL") ?? ""}/login`,
+          redirectTo: `${Deno.env.get("APP_URL") ?? ""}/redefinir-senha`,
         },
       });
 
