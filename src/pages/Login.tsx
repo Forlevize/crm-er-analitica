@@ -54,7 +54,7 @@ export function Login() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-appBg px-5 py-5 lg:px-10 lg:py-8">
       <div className="absolute inset-0 bg-[url('/login-bg.png')] bg-cover bg-center bg-no-repeat opacity-100" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(251,248,243,0.28),rgba(251,248,243,0.38))]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(251,248,243,0.2),rgba(251,248,243,0.3))]" />
 
       <div className="mx-auto flex max-w-[1380px] items-start justify-between border-b border-black/8 pb-4">
         <div>
@@ -65,7 +65,6 @@ export function Login() {
       </div>
 
       <div className="relative z-10 mx-auto mt-7 grid max-w-[1380px] gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-        {/* Marketing panel */}
         <section className="relative overflow-hidden rounded-2xl bg-marine px-7 py-7 text-white shadow-float lg:px-9 lg:py-8">
           <div className="absolute right-[-90px] top-8 h-60 w-60 rounded-full bg-veoliaRed/92" />
           <div className="absolute bottom-[-130px] right-[10%] h-72 w-72 rounded-full bg-turquoise/86" />
@@ -77,7 +76,7 @@ export function Login() {
                 Plataforma operacional
               </p>
               <h2 className="mt-6 max-w-[620px] text-[38px] font-semibold leading-[0.94] tracking-[-0.08em] sm:text-[52px] lg:text-[70px]">
-                Controle visual claro para uma operação crítica.
+                Controle visual claro para uma operacao critica.
               </h2>
               <p className="mt-4 max-w-[520px] text-base leading-7 text-white/76">
                 Um ambiente unificado para owners, lideres, gestores e administradores acompanharem calibracoes,
@@ -97,14 +96,13 @@ export function Login() {
                 <Workflow className="h-5 w-5 text-turquoise" />
                 <p className="mt-3 text-[22px] font-semibold leading-none tracking-[-0.04em]">Fluxo centralizado</p>
                 <p className="mt-2 text-sm leading-6 text-white/72">
-                  Equipamentos, CRM, revisões e acompanhamento operacional organizados no mesmo ambiente.
+                  Equipamentos, CRM, revisoes e acompanhamento operacional organizados no mesmo ambiente.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Form panel */}
         <section className="rounded-2xl border border-black/8 bg-white/96 px-7 py-7 shadow-panel backdrop-blur-[8px] lg:px-9">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-marine">Acesso ao sistema</p>
           <h2 className="mt-4 text-[38px] font-semibold leading-none tracking-[-0.07em] text-textPrimary">Entrar</h2>

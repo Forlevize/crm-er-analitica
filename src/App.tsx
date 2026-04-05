@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 
 const Login = lazy(() => import("@/pages/Login").then((module) => ({ default: module.Login })));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword").then((module) => ({ default: module.ResetPassword })));
 const Dashboard = lazy(() => import("@/pages/Dashboard").then((module) => ({ default: module.Dashboard })));
 const Equipamentos = lazy(() => import("@/pages/Equipamentos").then((module) => ({ default: module.Equipamentos })));
 const Emails = lazy(() => import("@/pages/Emails").then((module) => ({ default: module.Emails })));
@@ -33,6 +34,7 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={withSuspense(<Login />)} />
+          <Route path="/redefinir-senha" element={withSuspense(<ResetPassword />)} />
           <Route element={<ProtectedRoute allowedRoles={["admin", "gestor", "lider", "usuario"]} />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="/equipamentos" element={withSuspense(<Equipamentos />)} />

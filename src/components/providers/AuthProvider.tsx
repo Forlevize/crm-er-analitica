@@ -21,6 +21,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   defaultRoute: string;
 }
 
@@ -79,13 +80,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     }
 
+    const sb = supabase;
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = sb.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       if (!nextSession?.user) {
         setProfile(null);
+        return;
       }
+
+      void sb
+        .from("users")
+        .select("*")
+        .eq("id", nextSession.user.id)
+        .single()
+        .then(({ data }) => {
+          setProfile((data as AppUser | null) ?? null);
+        });
     });
 
     return () => {
@@ -156,8 +169,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: `${window.location.origin}/redefinir-senha`,
     });
+    if (error) {
+      throw error;
+    }
+  }
+
+  async function updatePassword(password: string) {
+    if (!isSupabaseConfigured || !supabase) {
+      void password;
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password });
     if (error) {
       throw error;
     }
@@ -173,6 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signOut,
       requestPasswordReset,
+      updatePassword,
       defaultRoute: getDefaultRoute(role),
     }),
     [isLoading, permissions, profile, role, session],
