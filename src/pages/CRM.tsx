@@ -9,7 +9,7 @@ import type { CrmCard } from "@/types";
 
 export function CRM() {
   const { role, profile } = useAuth();
-  const { columns, interactions, emailLogs, equipamentos, users, isLoading, moveCard, addNote } = useCRM();
+  const { columns, interactions, attachments, emailLogs, equipamentos, users, isLoading, moveCard, addNote, openAttachment } = useCRM();
   const [selectedCard, setSelectedCard] = useState<CrmCard | null>(null);
   const [leaderFilter, setLeaderFilter] = useState("todos");
 
@@ -83,15 +83,25 @@ export function CRM() {
         card={selectedCard}
         owner={selectedOwner}
         lider={selectedLeader}
+        users={users}
         equipamentos={equipamentos.filter((item) => item.owner_id === selectedCard?.owner_id)}
         interactions={interactions.filter((item) => item.card_id === selectedCard?.id)}
+        attachments={attachments.filter((item) => item.card_id === selectedCard?.id)}
         emailLogs={emailLogs.filter((item) => item.owner_id === selectedCard?.owner_id)}
-        onSaveNote={async (cardId, ownerId, note) => {
+        onSaveNote={async (cardId, ownerId, note, files) => {
           try {
-            await addNote(cardId, ownerId, note);
+            await addNote(cardId, ownerId, note, files);
             toast.success("Anotacao registrada no CRM.");
           } catch (error) {
             toast.error(error instanceof Error ? error.message : "Falha ao salvar anotacao.");
+          }
+        }}
+        onOpenAttachment={async (attachment) => {
+          try {
+            const url = await openAttachment(attachment);
+            window.open(url, "_blank", "noopener,noreferrer");
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Falha ao abrir anexo.");
           }
         }}
         onClose={() => setSelectedCard(null)}

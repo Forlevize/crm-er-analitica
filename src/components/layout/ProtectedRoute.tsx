@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -11,6 +12,20 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ allowedRoles, redirectTo = "/login" }: ProtectedRouteProps) {
   const { role, isLoading, defaultRoute } = useAuth();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("er-analitica-sidebar-collapsed");
+    setSidebarCollapsed(saved === "true");
+  }, []);
+
+  function toggleSidebar() {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      window.localStorage.setItem("er-analitica-sidebar-collapsed", String(next));
+      return next;
+    });
+  }
 
   if (isLoading) {
     return (
@@ -32,8 +47,12 @@ export function ProtectedRoute({ allowedRoles, redirectTo = "/login" }: Protecte
     <div className="relative min-h-screen overflow-hidden bg-appBg">
       <div className="pointer-events-none absolute right-[-120px] top-[-120px] h-96 w-96 rounded-full bg-turquoise/10 blur-3xl" />
       <div className="pointer-events-none absolute bottom-[-140px] left-[260px] h-[420px] w-[420px] rounded-full bg-veoliaRed/6 blur-3xl" />
-      <Sidebar />
-      <div className="relative ml-[272px] px-10 pb-12 pt-5">
+      <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      <div
+        className={`relative px-10 pb-12 pt-5 transition-[margin-left] duration-200 ${
+          sidebarCollapsed ? "ml-[100px]" : "ml-[272px]"
+        }`}
+      >
         <div className="mx-auto max-w-[1440px]">
           <Header />
           <main className="mt-5">

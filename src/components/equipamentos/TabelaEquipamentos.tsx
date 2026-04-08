@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { ClipboardCheck, FileText, Pencil, RefreshCcw, ShieldAlert, Trash2 } from "lucide-react";
+import { ClipboardCheck, Pencil, RefreshCcw, ShieldAlert, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { Table, TBody, TD, TH, THead } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
-import type { EquipamentoDocumento, EquipamentoVisao, UserRole } from "@/types";
+import type { EquipamentoVisao, UserRole } from "@/types";
 import { BadgeStatus } from "./BadgeStatus";
 
 interface TabelaEquipamentosProps {
@@ -16,6 +16,7 @@ interface TabelaEquipamentosProps {
   onViewHistory: (item: EquipamentoVisao) => void;
   onRequestReview: (item: EquipamentoVisao) => void;
   onManageDocuments: (item: EquipamentoVisao) => void;
+  onOpenOwner: (item: EquipamentoVisao) => void;
   onSync: () => void;
   onReset: () => void;
   currentPage: number;
@@ -24,7 +25,6 @@ interface TabelaEquipamentosProps {
   totalItems: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
-  documentosByEquipamentoId: Map<string, EquipamentoDocumento[]>;
 }
 
 export function TabelaEquipamentos({
@@ -35,6 +35,7 @@ export function TabelaEquipamentos({
   onViewHistory,
   onRequestReview,
   onManageDocuments,
+  onOpenOwner,
   onSync,
   onReset,
   currentPage,
@@ -43,12 +44,11 @@ export function TabelaEquipamentos({
   totalItems,
   onPageChange,
   onPageSizeChange,
-  documentosByEquipamentoId,
 }: TabelaEquipamentosProps) {
   const topScrollRef = useRef<HTMLDivElement | null>(null);
   const bottomScrollRef = useRef<HTMLDivElement | null>(null);
   const syncingRef = useRef(false);
-  const [topScrollContentWidth, setTopScrollContentWidth] = useState(2340);
+  const [topScrollContentWidth, setTopScrollContentWidth] = useState(1880);
 
   function getContactStatusClass(status: string) {
     const normalized = status.toLowerCase();
@@ -181,11 +181,11 @@ export function TabelaEquipamentos({
         className="overflow-x-auto"
         onScroll={() => syncHorizontalScroll("bottom")}
       >
-        <Table className="min-w-[2340px]">
+        <Table className="min-w-[1880px]">
           <THead>
             <tr>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Status</TH>
-              <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Status eqp.</TH>
+              <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Situacao</TH>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Serial</TH>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Equipamento</TH>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Brand</TH>
@@ -194,10 +194,6 @@ export function TabelaEquipamentos({
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Prox. cal.</TH>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Certificate</TH>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Owner</TH>
-              <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">E-mail</TH>
-              <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Cel #</TH>
-              <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Leader</TH>
-              <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">E-mail leader</TH>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">District</TH>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">UF</TH>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">City</TH>
@@ -205,8 +201,6 @@ export function TabelaEquipamentos({
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Vendor</TH>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Obs.</TH>
               <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Status contato</TH>
-              <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">Executado</TH>
-              <TH className="sticky top-0 z-20 whitespace-nowrap bg-marine px-3 py-2 text-[11px]">PDFs</TH>
               <TH className="sticky right-0 top-0 z-30 whitespace-nowrap bg-marine px-3 py-2 text-[11px] shadow-[-10px_0_18px_rgba(0,45,98,0.22)]">
                 Acoes
               </TH>
@@ -215,7 +209,7 @@ export function TabelaEquipamentos({
           <TBody>
             {items.length === 0 ? (
               <tr>
-                <TD colSpan={24} className="px-3 py-6 text-center text-sm text-textSecondary">
+                <TD colSpan={17} className="px-3 py-6 text-center text-sm text-textSecondary">
                   Nenhum equipamento encontrado para os filtros selecionados.
                 </TD>
               </tr>
@@ -236,12 +230,28 @@ export function TabelaEquipamentos({
                 <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{item.model ?? "-"}</TD>
                 <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{formatDate(item.ultima_calibracao)}</TD>
                 <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{formatDate(item.proxima_calibracao)}</TD>
-                <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{item.certificado ?? "-"}</TD>
-                <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{item.owner_name}</TD>
-                <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{item.owner_email || "-"}</TD>
-                <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{item.owner_phone ?? "-"}</TD>
-                <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{item.lider_name ?? "-"}</TD>
-                <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{item.lider_email ?? "-"}</TD>
+                <TD className="whitespace-nowrap px-3 py-2 align-middle">
+                  <Button
+                    variant="ghost"
+                    className="h-8 rounded-xl px-2.5 py-0 text-[11px] font-semibold"
+                    onClick={() => onManageDocuments(item)}
+                  >
+                    {item.certificado ? `Cert. ${item.certificado}` : "Anexar revisao"}
+                  </Button>
+                </TD>
+                <TD className="whitespace-nowrap px-3 py-2 align-middle">
+                  {role === "admin" ? (
+                    <Button
+                      variant="ghost"
+                      className="h-8 rounded-xl px-2.5 py-0 text-[12px] font-semibold text-marine"
+                      onClick={() => onOpenOwner(item)}
+                    >
+                      {item.owner_name}
+                    </Button>
+                  ) : (
+                    <span className="text-[13px]">{item.owner_name}</span>
+                  )}
+                </TD>
                 <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{item.district ?? item.owner_district ?? "-"}</TD>
                 <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{item.region_state ?? "-"}</TD>
                 <TD className="whitespace-nowrap px-3 py-2 text-[13px] align-middle">{item.city ?? "-"}</TD>
@@ -252,13 +262,6 @@ export function TabelaEquipamentos({
                   <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${getContactStatusClass(item.status_contato)}`}>
                     {item.status_contato}
                   </span>
-                </TD>
-                <TD className="whitespace-nowrap px-3 py-2 text-[13px] font-semibold align-middle">{item.executado}</TD>
-                <TD className="whitespace-nowrap px-3 py-2 align-middle">
-                  <Button variant="ghost" className="h-8 gap-1.5 rounded-xl px-2.5 py-0 text-[11px]" onClick={() => onManageDocuments(item)}>
-                    <FileText className="h-4 w-4" />
-                    {documentosByEquipamentoId.get(item.id)?.length ?? 0} PDF(s)
-                  </Button>
                 </TD>
                 <TD className="sticky right-0 z-10 whitespace-nowrap bg-white px-3 py-2 align-middle shadow-[-10px_0_18px_rgba(15,23,42,0.08)]">
                   <div className="flex flex-nowrap gap-1.5">

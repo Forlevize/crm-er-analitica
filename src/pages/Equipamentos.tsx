@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ModalHistoricoCalibracoes } from "@/components/equipamentos/ModalHistoricoCalibracoes";
 import { ModalEquipamento } from "@/components/equipamentos/ModalEquipamento";
@@ -14,6 +15,7 @@ import type { Calibracao, EquipamentoDocumento, EquipamentoVisao } from "@/types
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 export function Equipamentos() {
+  const navigate = useNavigate();
   const { role, profile } = useAuth();
   const {
     equipamentos,
@@ -29,7 +31,6 @@ export function Equipamentos() {
     uploadDocumentoEquipamento,
     deleteDocumentoEquipamento,
     openDocumentoEquipamento,
-    documentosByEquipamentoId,
     syncEquipamentosSheet,
     resetEquipamentos,
   } = useEquipamentos();
@@ -179,6 +180,9 @@ export function Equipamentos() {
             toast.error(error instanceof Error ? error.message : "Falha ao solicitar revisao.");
           }
         }}
+        onOpenOwner={(item) => {
+          navigate(`/usuarios?edit=${item.owner_id}`);
+        }}
         onSync={async () => {
           try {
             const result = await syncEquipamentosSheet();
@@ -195,7 +199,6 @@ export function Equipamentos() {
           setResetPassword("");
           setResetOpen(true);
         }}
-        documentosByEquipamentoId={documentosByEquipamentoId}
       />
       {role === "admin" ? (
         <ModalEquipamento

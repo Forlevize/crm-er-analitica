@@ -1,5 +1,7 @@
 import {
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   LayoutDashboard,
   Mail,
@@ -71,10 +73,20 @@ function VeoliaLogo() {
   );
 }
 
-function NavSection({ title, entries }: { title: string; entries: typeof items }) {
+function NavSection({
+  title,
+  entries,
+  collapsed,
+}: {
+  title: string;
+  entries: typeof items;
+  collapsed: boolean;
+}) {
   return (
     <div>
-      <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/36">{title}</p>
+      {!collapsed ? (
+        <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/36">{title}</p>
+      ) : null}
       <div className="space-y-0.5">
         {entries.map((item) => {
           const Icon = item.icon;
@@ -85,7 +97,8 @@ function NavSection({ title, entries }: { title: string; entries: typeof items }
               to={item.href}
               className={({ isActive }) =>
                 cn(
-                  "group relative flex items-center gap-3.5 rounded-xl px-3 py-3.5 transition-all duration-150",
+                  "group relative flex items-center rounded-xl px-3 py-3.5 transition-all duration-150",
+                  collapsed ? "justify-center" : "gap-3.5",
                   isActive
                     ? "bg-white/12 text-white"
                     : "text-white/55 hover:bg-white/6 hover:text-white/90",
@@ -106,14 +119,16 @@ function NavSection({ title, entries }: { title: string; entries: typeof items }
                       isActive ? "text-white" : "text-white/45 group-hover:text-white/80",
                     )}
                   />
-                  <span
-                    className={cn(
-                      "flex-1 text-[14px] leading-none tracking-[-0.01em]",
-                      isActive ? "font-medium text-white" : "font-normal",
-                    )}
-                  >
-                    {item.label}
-                  </span>
+                  {!collapsed ? (
+                    <span
+                      className={cn(
+                        "flex-1 text-[14px] leading-none tracking-[-0.01em]",
+                        isActive ? "font-medium text-white" : "font-normal",
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                  ) : null}
                 </>
               )}
             </NavLink>
@@ -124,7 +139,12 @@ function NavSection({ title, entries }: { title: string; entries: typeof items }
   );
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
+export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { role, profile } = useAuth();
 
   const visibleItems = items.filter((item) => canAccessItem(item.roles, role));
@@ -132,37 +152,69 @@ export function Sidebar() {
   const controlItems = visibleItems.filter((item) => item.section === "controle");
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-[256px] overflow-hidden border-r border-white/8 bg-[linear-gradient(180deg,#002d62_0%,#002654_100%)] text-white">
+    <aside
+      className={cn(
+        "fixed left-0 top-0 z-40 h-screen overflow-hidden border-r border-white/8 bg-[linear-gradient(180deg,#002d62_0%,#002654_100%)] text-white transition-[width] duration-200",
+        collapsed ? "w-[84px]" : "w-[256px]",
+      )}
+    >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(255,255,255,0.06),transparent_50%)]" />
 
       <div className="relative z-10 flex h-full flex-col px-4 py-7">
+        <div className="mb-4 flex justify-end">
+          <button
+            type="button"
+            onClick={onToggle}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/12 bg-white/6 text-white/75 transition hover:bg-white/10 hover:text-white"
+            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
+        </div>
+
         {/* Logo */}
-        <div className="px-1 pb-7">
-          <span className="mb-4 block text-[10px] font-semibold uppercase tracking-[0.24em] text-white/36">Plataforma</span>
-          <VeoliaLogo />
+        <div className={cn("px-1 pb-7", collapsed && "pb-5")}>
+          {!collapsed ? (
+            <>
+              <span className="mb-4 block text-[10px] font-semibold uppercase tracking-[0.24em] text-white/36">Plataforma</span>
+              <VeoliaLogo />
+            </>
+          ) : (
+            <div className="flex justify-center">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-[11px] font-semibold text-white">
+                EA
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="border-t border-white/8" />
 
         {/* Nav */}
         <nav className="sidebar-scroll relative mt-6 flex-1 space-y-7 overflow-y-auto">
-          {operationItems.length > 0 ? <NavSection title="Operacao" entries={operationItems} /> : null}
-          {controlItems.length > 0 ? <NavSection title="Controle" entries={controlItems} /> : null}
+          {operationItems.length > 0 ? (
+            <NavSection title="Operacao" entries={operationItems} collapsed={collapsed} />
+          ) : null}
+          {controlItems.length > 0 ? (
+            <NavSection title="Controle" entries={controlItems} collapsed={collapsed} />
+          ) : null}
         </nav>
 
         <div className="border-t border-white/8" />
 
         {/* User profile */}
-        <div className="mt-5 flex items-center gap-3 px-1">
+        <div className={cn("mt-5 flex items-center gap-3 px-1", collapsed && "justify-center")}>
           <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/12 text-[13px] font-semibold text-white">
             {getInitials(profile?.full_name)}
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-[13px] font-medium leading-none text-white">
-              {profile?.full_name ?? "Usuario"}
-            </p>
-            <p className="mt-1.5 text-[11px] leading-none capitalize text-white/46">{profile?.role ?? "Perfil"}</p>
-          </div>
+          {!collapsed ? (
+            <div className="min-w-0">
+              <p className="truncate text-[13px] font-medium leading-none text-white">
+                {profile?.full_name ?? "Usuario"}
+              </p>
+              <p className="mt-1.5 text-[11px] leading-none capitalize text-white/46">{profile?.role ?? "Perfil"}</p>
+            </div>
+          ) : null}
         </div>
       </div>
     </aside>

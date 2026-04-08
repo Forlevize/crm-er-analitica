@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ModalUsuario } from "@/components/usuarios/ModalUsuario";
 import { TabelaUsuarios } from "@/components/usuarios/TabelaUsuarios";
@@ -8,8 +9,41 @@ import type { AppUser } from "@/types";
 
 export function Usuarios() {
   const { users, lideres, isLoading, saveUsuario, toggleUserActive } = useUsuarios();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selected, setSelected] = useState<AppUser | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filteredUsers = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    if (!query) {
+      return users;
+    }
+
+    return users.filter(
+      (user) =>
+        user.full_name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query),
+    );
+  }, [search, users]);
+
+  useEffect(() => {
+    const editUserId = searchParams.get("edit");
+    if (!editUserId || users.length === 0) {
+      return;
+    }
+
+    const user = users.find((entry) => entry.id === editUserId);
+    if (!user) {
+      return;
+    }
+
+    setSelected(user);
+    setModalOpen(true);
+    setSearch(user.full_name);
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams, users]);
 
   return (
     <div className="space-y-5">
@@ -28,10 +62,19 @@ export function Usuarios() {
         </Button>
       </div>
 
+      <div className="max-w-md">
+        <input
+          className="h-11 w-full rounded-2xl border border-marine/12 bg-white/80 px-4 text-sm text-textPrimary outline-none transition focus:border-marine/25"
+          placeholder="Buscar por nome ou e-mail"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      </div>
+
       {isLoading ? <p className="text-sm text-textSecondary">Carregando usuarios...</p> : null}
 
       <TabelaUsuarios
-        users={users}
+        users={filteredUsers}
         lideres={lideres}
         onEdit={(user) => {
           setSelected(user);

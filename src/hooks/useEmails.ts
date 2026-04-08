@@ -383,6 +383,7 @@ export function useEmails() {
     upcomingEmails,
     emailLogs: scopedEmailLogs,
     equipamentos: scopedEquipamentos,
+    users: scopedUsers,
     metrics,
     isLoading,
   };

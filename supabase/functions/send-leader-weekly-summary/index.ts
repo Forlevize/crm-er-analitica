@@ -23,6 +23,8 @@ type EmailLogRow = {
   owner_id: string;
   tipo: "aviso_60" | "aviso_45" | "escalonamento_gestor" | "semanal_lider";
   status: "enviado" | "falha" | "ignorado_sem_destinatario";
+  provider_email_id?: string | null;
+  last_event?: string | null;
   meta: {
     week_start?: string;
     reference_date?: string;
@@ -101,7 +103,7 @@ Deno.serve(async (request) => {
       const vencido = scoped.filter((item) => item.status_calibracao === "vencido").length;
 
       try {
-        await sendEmail({
+        const emailResult = await sendEmail({
           to: [leader.email],
           subject: "[ER Analitica] Resumo semanal de KPIs",
           html: renderLeaderWeeklyTemplate({
@@ -120,6 +122,8 @@ Deno.serve(async (request) => {
           tipo: "semanal_lider",
           enviado_para: [leader.email],
           status: "enviado",
+          provider_email_id: emailResult.id ?? null,
+          last_event: "sent",
           meta: {
             week_start: weekStart,
             reference_date: referenceDate.toISOString(),
@@ -139,6 +143,8 @@ Deno.serve(async (request) => {
           owner_id: leader.id,
           tipo: "semanal_lider",
           status: "enviado",
+          provider_email_id: emailResult.id ?? null,
+          last_event: "sent",
           meta: {
             week_start: weekStart,
             reference_date: referenceDate.toISOString(),

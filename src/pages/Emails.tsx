@@ -1,4 +1,6 @@
+import { useMemo, useState } from "react";
 import { Card, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { TabelaRelatorio } from "@/components/relatorios/TabelaRelatorio";
 import { useEmails } from "@/hooks/useEmails";
 import { formatDateTime } from "@/lib/utils";
@@ -43,8 +45,60 @@ function getStatusLabel(status: string) {
   }
 }
 
+function getOpenStatusLabel(openedAt?: string | null, lastEvent?: string | null, openCount?: number | null) {
+  if (openedAt) {
+    return `Aberto ${openCount && openCount > 1 ? `(${openCount}x)` : ""}`.trim();
+  }
+
+  if (lastEvent === "sent") {
+    return "Enviado sem confirmacao";
+  }
+
+  return "Nao rastreado";
+}
+
 export function Emails() {
-  const { upcomingEmails, emailLogs, equipamentos, metrics, isLoading } = useEmails();
+  const { upcomingEmails, emailLogs, equipamentos, users, metrics, isLoading } = useEmails();
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const [recipientSearch, setRecipientSearch] = useState("");
+
+  const normalizedOwnerSearch = ownerSearch.trim().toLowerCase();
+  const normalizedRecipientSearch = recipientSearch.trim().toLowerCase();
+
+  const filteredUpcomingEmails = useMemo(() => {
+    return upcomingEmails.filter((item) => {
+      const matchesOwner =
+        !normalizedOwnerSearch ||
+        item.owner_nome.toLowerCase().includes(normalizedOwnerSearch) ||
+        (item.lider_nome?.toLowerCase().includes(normalizedOwnerSearch) ?? false);
+
+      const matchesRecipient =
+        !normalizedRecipientSearch ||
+        item.destinatarios.some((email) => email.toLowerCase().includes(normalizedRecipientSearch)) ||
+        (item.owner_email?.toLowerCase().includes(normalizedRecipientSearch) ?? false) ||
+        (item.lider_email?.toLowerCase().includes(normalizedRecipientSearch) ?? false) ||
+        (item.gestor_email?.toLowerCase().includes(normalizedRecipientSearch) ?? false);
+
+      return matchesOwner && matchesRecipient;
+    });
+  }, [normalizedOwnerSearch, normalizedRecipientSearch, upcomingEmails]);
+
+  const filteredEmailLogs = useMemo(() => {
+    return emailLogs.filter((item) => {
+      const owner = users.find((user) => user.id === item.owner_id);
+
+      const matchesOwner =
+        !normalizedOwnerSearch ||
+        owner?.full_name.toLowerCase().includes(normalizedOwnerSearch) ||
+        owner?.email.toLowerCase().includes(normalizedOwnerSearch);
+
+      const matchesRecipient =
+        !normalizedRecipientSearch ||
+        item.enviado_para.some((email) => email.toLowerCase().includes(normalizedRecipientSearch));
+
+      return Boolean(matchesOwner && matchesRecipient);
+    });
+  }, [emailLogs, normalizedOwnerSearch, normalizedRecipientSearch, users]);
 
   return (
     <div className="space-y-5">
@@ -76,11 +130,24 @@ export function Emails() {
         </Card>
       </div>
 
+      <div className="grid gap-3 md:grid-cols-2">
+        <Input
+          placeholder="Buscar por owner ou lider"
+          value={ownerSearch}
+          onChange={(event) => setOwnerSearch(event.target.value)}
+        />
+        <Input
+          placeholder="Buscar por destinatario (e-mail)"
+          value={recipientSearch}
+          onChange={(event) => setRecipientSearch(event.target.value)}
+        />
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-borderSoft bg-appBg px-4 py-3">
         <p className="text-sm text-textSecondary">
           Fila calculada com base nas regras atuais do sistema e nos dados reais do CRM.
         </p>
-        <span className="text-xs font-medium text-textSecondary">{upcomingEmails.length} regras avaliadas</span>
+        <span className="text-xs font-medium text-textSecondary">{filteredUpcomingEmails.length} regras avaliadas</span>
       </div>
 
       {isLoading ? <p className="text-sm text-textSecondary">Carregando dados de e-mail...</p> : null}
@@ -88,7 +155,7 @@ export function Emails() {
       <TabelaRelatorio
         title="Proximos e-mails e regras avaliadas"
         headers={["Tipo", "Data prevista", "Owner/Lider", "Destinatarios", "Motivo", "Status"]}
-        rows={upcomingEmails.map((item) => [
+        rows={filteredUpcomingEmails.map((item) => [
           getTipoLabel(item.tipo),
           formatDateTime(item.data_prevista),
           item.tipo === "semanal_lider"
@@ -102,11 +169,13 @@ export function Emails() {
 
       <TabelaRelatorio
         title="Historico de e-mails enviados"
-        headers={["Tipo", "Data de envio", "Destinatarios", "Status", "Equipamento"]}
-        rows={emailLogs.map((item) => [
+        headers={["Tipo", "Owner", "Data de envio", "Destinatarios", "Leitura", "Status", "Equipamento"]}
+        rows={filteredEmailLogs.map((item) => [
           getTipoLabel(item.tipo),
+          users.find((user) => user.id === item.owner_id)?.full_name ?? "-",
           formatDateTime(item.enviado_em),
           item.enviado_para.join(", ") || "-",
+          item.opened_at ? `${getOpenStatusLabel(item.opened_at, item.last_event, item.open_count)} / ${formatDateTime(item.opened_at)}` : getOpenStatusLabel(item.opened_at, item.last_event, item.open_count),
           getStatusLabel(item.status),
           item.equipamento_id
             ? (() => {
@@ -124,7 +193,7 @@ export function Emails() {
             { title: "Agendado", desc: "A regra esta apta e o proximo job deve disparar o e-mail." },
             { title: "Bloqueado", desc: "Falta destinatario ou o card nao esta na etapa esperada para o envio." },
             { title: "Ja enviado", desc: "O e-mail ja saiu no ciclo atual e nao deve repetir indevidamente." },
-            { title: "Resolvido", desc: "O CRM indica resposta ou encerramento, entao a automacao para." },
+            { title: "Leitura", desc: "Aberturas dependem do webhook do Resend configurado para atualizar o log." },
           ].map((item) => (
             <div key={item.title} className="rounded-xl border border-borderSoft bg-appBg px-4 py-3">
               <strong className="mb-1 block text-textPrimary">{item.title}</strong>

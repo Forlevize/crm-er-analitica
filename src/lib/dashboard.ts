@@ -24,6 +24,7 @@ export function buildDashboardMetrics(
   isAdmin: boolean,
   sources: DashboardMetricSources,
 ): DashboardMetrics {
+  const equipmentById = new Map(items.map((item) => [item.id, item]));
   const scoped = items.filter((item) => {
     if (!item.active) {
       return false;
@@ -40,6 +41,19 @@ export function buildDashboardMetrics(
   const monthLabels = getMonthLabels();
   const status = summarizeStatus(scoped);
 
+  const scopedCalibracoes = sources.calibracoes.filter((item) => {
+    const equipamento = equipmentById.get(item.equipamento_id);
+    if (!equipamento?.active) {
+      return false;
+    }
+
+    if (district && district !== "todos") {
+      return equipamento.owner_district === district;
+    }
+
+    return true;
+  });
+
   const previstoPorMes = monthLabels.map((mes, index) => {
     const previsto = scoped.filter((item) => {
       if (!item.proxima_calibracao) {
@@ -49,7 +63,7 @@ export function buildDashboardMetrics(
       return date.getMonth() === index && getYear(date) === currentYear;
     }).length;
 
-    const executado = sources.calibracoes.filter((item) => {
+    const executado = scopedCalibracoes.filter((item) => {
       const date = parseISO(item.data_calibracao);
       return item.realizado && date.getMonth() === index && getYear(date) === currentYear;
     }).length;
@@ -84,7 +98,10 @@ export function buildDashboardMetrics(
   });
 
   return {
-    calibracoesRealizadas: sources.calibracoes.filter((item) => item.realizado).length,
+    calibracoesRealizadas: scopedCalibracoes.filter((item) => {
+      const date = parseISO(item.data_calibracao);
+      return item.realizado && getYear(date) === currentYear;
+    }).length,
     equipamentosAtivos: scoped.length,
     equipamentosVencidos: status.vencido,
     previstoPorMes,

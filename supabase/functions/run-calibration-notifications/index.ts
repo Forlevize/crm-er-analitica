@@ -42,6 +42,8 @@ type EmailLogRow = {
   equipamento_id: string | null;
   tipo: "aviso_60" | "aviso_45" | "escalonamento_gestor" | "semanal_lider";
   status: "enviado" | "falha" | "ignorado_sem_destinatario";
+  provider_email_id?: string | null;
+  last_event?: string | null;
   meta: {
     proxima_calibracao?: string;
     reference_date?: string;
@@ -175,7 +177,7 @@ Deno.serve(async (request) => {
             throw new Error("Card de CRM nao disponivel para aviso de 60 dias.");
           }
 
-          await sendEmail({
+          const emailResult = await sendEmail({
             to: [owner.email],
             subject: `[ER Analitica] Aviso 60 dias - ${equipamento.serial_number}`,
             html: renderEquipamentoTemplate({
@@ -226,6 +228,8 @@ Deno.serve(async (request) => {
             tipo: "aviso_60",
             enviado_para: [owner.email],
             status: "enviado",
+            provider_email_id: emailResult.id ?? null,
+            last_event: "sent",
             meta: {
               proxima_calibracao: equipamento.proxima_calibracao,
               reference_date: referenceDate.toISOString(),
@@ -237,6 +241,8 @@ Deno.serve(async (request) => {
             equipamento_id: equipamento.id,
             tipo: "aviso_60",
             status: "enviado",
+            provider_email_id: emailResult.id ?? null,
+            last_event: "sent",
             meta: {
               proxima_calibracao: equipamento.proxima_calibracao,
               reference_date: referenceDate.toISOString(),
@@ -264,7 +270,7 @@ Deno.serve(async (request) => {
 
           const cc = leader?.email ? [leader.email] : [];
 
-          await sendEmail({
+          const emailResult = await sendEmail({
             to: [owner.email],
             cc,
             subject: `[ER Analitica] Aviso 45 dias - ${equipamento.serial_number}`,
@@ -293,6 +299,8 @@ Deno.serve(async (request) => {
             tipo: "aviso_45",
             enviado_para: [owner.email, ...cc],
             status: "enviado",
+            provider_email_id: emailResult.id ?? null,
+            last_event: "sent",
             meta: {
               proxima_calibracao: equipamento.proxima_calibracao,
               reference_date: referenceDate.toISOString(),
@@ -304,6 +312,8 @@ Deno.serve(async (request) => {
             equipamento_id: equipamento.id,
             tipo: "aviso_45",
             status: "enviado",
+            provider_email_id: emailResult.id ?? null,
+            last_event: "sent",
             meta: {
               proxima_calibracao: equipamento.proxima_calibracao,
               reference_date: referenceDate.toISOString(),
@@ -357,7 +367,7 @@ Deno.serve(async (request) => {
 
           const cc = [owner.email, leader?.email].filter(Boolean) as string[];
 
-          await sendEmail({
+          const emailResult = await sendEmail({
             to: [gestor.email],
             cc,
             subject: `[ER Analitica] Escalonamento - ${equipamento.serial_number} vencido`,
@@ -386,6 +396,8 @@ Deno.serve(async (request) => {
             tipo: "escalonamento_gestor",
             enviado_para: [gestor.email, ...cc],
             status: "enviado",
+            provider_email_id: emailResult.id ?? null,
+            last_event: "sent",
             meta: {
               proxima_calibracao: equipamento.proxima_calibracao,
               reference_date: referenceDate.toISOString(),
@@ -397,6 +409,8 @@ Deno.serve(async (request) => {
             equipamento_id: equipamento.id,
             tipo: "escalonamento_gestor",
             status: "enviado",
+            provider_email_id: emailResult.id ?? null,
+            last_event: "sent",
             meta: {
               proxima_calibracao: equipamento.proxima_calibracao,
               reference_date: referenceDate.toISOString(),

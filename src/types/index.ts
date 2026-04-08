@@ -107,6 +107,19 @@ export interface CrmInteraction {
   created_by: string | null;
 }
 
+export interface CrmInteractionAttachment {
+  id: string;
+  interaction_id: string;
+  card_id: string;
+  owner_id: string;
+  nome_arquivo: string;
+  caminho_storage: string;
+  tipo_mime: string;
+  tamanho_bytes: number;
+  uploaded_by: string | null;
+  created_at: string;
+}
+
 export interface EmailLog {
   id: string;
   owner_id: string;
@@ -115,6 +128,10 @@ export interface EmailLog {
   enviado_para: string[];
   enviado_em: string;
   status: EmailLogStatus;
+  provider_email_id?: string | null;
+  last_event?: string | null;
+  opened_at?: string | null;
+  open_count?: number | null;
   meta?: Record<string, string | number | boolean | null> | null;
 }
 

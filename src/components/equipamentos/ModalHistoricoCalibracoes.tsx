@@ -42,13 +42,13 @@ export function ModalHistoricoCalibracoes({
     <Dialog
       open={open}
       onClose={onClose}
-      title={`Historico do equipamento${equipamento ? ` - ${equipamento.serial_number}` : ""}`}
-      description="Registro de calibracoes, agendamentos e PDFs de comprovacao vinculados ao equipamento."
+      title={`Certificate e revisoes${equipamento ? ` - ${equipamento.serial_number}` : ""}`}
+      description="Central de certificados, comprovacoes em PDF e historico de calibracoes vinculados ao equipamento."
       widthClassName="max-w-5xl"
     >
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Card className="bg-[linear-gradient(170deg,rgba(0,45,98,0.05),rgba(255,255,255,0.96))]">
-          <CardTitle className="mb-4">Calibracoes e agendamentos</CardTitle>
+          <CardTitle className="mb-4">Historico de calibracoes</CardTitle>
           <div className="overflow-x-auto">
             <Table>
               <THead>
@@ -80,7 +80,7 @@ export function ModalHistoricoCalibracoes({
 
         <Card className="bg-[linear-gradient(170deg,rgba(5,195,221,0.06),rgba(255,255,255,0.98))]">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <CardTitle>PDFs de revisao</CardTitle>
+            <CardTitle>Certificados e PDFs de revisao</CardTitle>
             {canManageDocuments ? (
               <>
                 <input

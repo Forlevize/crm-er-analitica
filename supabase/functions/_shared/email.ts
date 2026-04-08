@@ -5,6 +5,10 @@ interface SendEmailInput {
   html: string;
 }
 
+interface ResendSendResponse {
+  id?: string;
+}
+
 export async function sendEmail({ to, cc = [], subject, html }: SendEmailInput) {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   const from = Deno.env.get("RESEND_FROM_EMAIL") ?? "ER Analitica <no-reply@eranalitica.com>";
@@ -33,6 +37,5 @@ export async function sendEmail({ to, cc = [], subject, html }: SendEmailInput) 
     throw new Error(`Falha ao enviar e-mail: ${body}`);
   }
 
-  return response.json();
+  return (await response.json()) as ResendSendResponse;
 }
-
