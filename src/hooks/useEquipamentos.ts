@@ -15,6 +15,31 @@ const defaultFilters: EquipamentosFilters = {
 };
 
 type EquipamentoViewRow = EquipamentoVisao;
+type SpreadsheetImportRow = Record<string, string>;
+
+const spreadsheetTemplateRow = {
+  "Status Do equipamento": "Ativo",
+  "Serial Number": "",
+  Equipamento: "",
+  Brand: "",
+  Model: "",
+  "Ultima Calibracao": "",
+  "Proxima calibracao": "",
+  Certificate: "",
+  Owner: "",
+  "e-mail": "",
+  "Cel #": "",
+  Leader: "",
+  "email (leader)": "",
+  District: "",
+  "Region/State": "",
+  City: "",
+  Customer: "",
+  Vendor: "ER ANALITICA",
+  "Obs.": "",
+  "STATUS Contato": "",
+  Executado: "",
+};
 
 function toNullableDate(value: string | undefined) {
   return value ? value : null;
@@ -22,6 +47,27 @@ function toNullableDate(value: string | undefined) {
 
 function toNullableText(value: string | undefined) {
   return value?.trim() ? value.trim() : null;
+}
+
+async function parseSpreadsheetFile(file: File): Promise<SpreadsheetImportRow[]> {
+  const XLSX = await import("xlsx");
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: "array" });
+  const firstSheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[firstSheetName];
+
+  if (!worksheet) {
+    throw new Error("A planilha nao possui abas validas.");
+  }
+
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: "" });
+
+  return rows.map((row) =>
+    Object.entries(row).reduce<SpreadsheetImportRow>((acc, [key, value]) => {
+      acc[key] = value === null || value === undefined ? "" : String(value).trim();
+      return acc;
+    }, {}),
+  );
 }
 
 function buildLocalEquipamento(
@@ -496,14 +542,29 @@ export function useEquipamentos() {
     return data.signedUrl;
   }
 
-  async function syncEquipamentosSheet() {
+  async function uploadEquipamentosSheet(file: File) {
+    const normalizedName = file.name.toLowerCase();
+    const isSpreadsheet =
+      normalizedName.endsWith(".xlsx") ||
+      normalizedName.endsWith(".xls") ||
+      normalizedName.endsWith(".csv");
+
+    if (!isSpreadsheet) {
+      throw new Error("Envie uma planilha em formato .xlsx, .xls ou .csv.");
+    }
+
+    const rows = await parseSpreadsheetFile(file);
+    if (rows.length === 0) {
+      throw new Error("A planilha enviada nao possui linhas validas para importar.");
+    }
+
     if (!isSupabaseConfigured || !supabase) {
       return {
         success: true,
-        message: "Sincronizacao simulada em modo local.",
+        message: "Upload de planilha simulado em modo local.",
         stats: {
-          totalRows: items.length,
-          imported: items.length,
+          totalRows: rows.length,
+          imported: rows.length,
           skipped: 0,
           ownersNotFound: 0,
           leadersLinked: 0,
@@ -512,9 +573,17 @@ export function useEquipamentos() {
       };
     }
 
-    const result = await invokeEdgeFunction("sync-equipamentos-sheet", {});
+    const result = await invokeEdgeFunction("sync-equipamentos-sheet", { rows });
     await loadData();
     return result;
+  }
+
+  async function downloadModeloPlanilha() {
+    const XLSX = await import("xlsx");
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet([spreadsheetTemplateRow]);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Equipamentos");
+    XLSX.writeFile(workbook, "modelo-planilha-equipamentos-er-analitica.xlsx");
   }
 
   async function resetEquipamentos(password: string) {
@@ -550,7 +619,8 @@ export function useEquipamentos() {
     deleteDocumentoEquipamento,
     openDocumentoEquipamento,
     documentosByEquipamentoId,
-    syncEquipamentosSheet,
+    uploadEquipamentosSheet,
+    downloadModeloPlanilha,
     resetEquipamentos,
   };
 }

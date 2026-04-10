@@ -137,6 +137,22 @@ function parseSheetRows(csvText: string): ParsedRow[] {
   );
 }
 
+function normalizeIncomingRows(input: unknown): ParsedRow[] {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  return input
+    .filter((row) => row && typeof row === "object" && !Array.isArray(row))
+    .map((row) =>
+      Object.entries(row as Record<string, unknown>).reduce<ParsedRow>((acc, [key, value]) => {
+        acc[normalizeHeader(key)] = value === null || value === undefined ? "" : String(value).trim();
+        return acc;
+      }, {}),
+    )
+    .filter((row) => Object.values(row).some((value) => value !== ""));
+}
+
 function getField(row: ParsedRow, aliases: string[]) {
   for (const alias of aliases) {
     const key = normalizeHeader(alias);
@@ -250,7 +266,7 @@ function mapContactStatusToColumn(status: string) {
     return "agendado";
   }
   if (normalized.includes("perdido")) {
-    return "perdido";
+    return "sem_contato";
   }
 
   return "sem_contato";
@@ -351,6 +367,7 @@ Deno.serve(async (request) => {
   }
 
   try {
+    const requestBody = request.method === "POST" ? await request.json().catch(() => ({})) : {};
     const authHeader = request.headers.get("Authorization");
     if (!authHeader) {
       return jsonResponse({ error: "Token ausente." }, { status: 401 });
@@ -373,24 +390,31 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: "Apenas admin pode sincronizar equipamentos." }, { status: 403 });
     }
 
-    const csvUrl = resolveCsvUrl();
-    if (!csvUrl) {
-      return jsonResponse(
-        { error: "Secret GOOGLE_SHEET_CSV_URL ou GOOGLE_SHEET_URL nao configurada." },
-        { status: 400 },
-      );
+    const uploadedRows = normalizeIncomingRows((requestBody as { rows?: unknown }).rows);
+    let csvUrl: string | null = null;
+    let rows = uploadedRows;
+
+    if (rows.length === 0) {
+      csvUrl = resolveCsvUrl();
+      if (!csvUrl) {
+        return jsonResponse(
+          { error: "Secret GOOGLE_SHEET_CSV_URL ou GOOGLE_SHEET_URL nao configurada e nenhuma planilha foi enviada." },
+          { status: 400 },
+        );
+      }
+
+      const csvResponse = await fetch(csvUrl);
+      if (!csvResponse.ok) {
+        return jsonResponse(
+          { error: `Falha ao baixar planilha: HTTP ${csvResponse.status}.` },
+          { status: 400 },
+        );
+      }
+
+      const csvText = await csvResponse.text();
+      rows = parseSheetRows(csvText);
     }
 
-    const csvResponse = await fetch(csvUrl);
-    if (!csvResponse.ok) {
-      return jsonResponse(
-        { error: `Falha ao baixar planilha: HTTP ${csvResponse.status}.` },
-        { status: 400 },
-      );
-    }
-
-    const csvText = await csvResponse.text();
-    const rows = parseSheetRows(csvText);
     if (rows.length === 0) {
       return jsonResponse({ error: "Planilha vazia ou sem linhas validas." }, { status: 400 });
     }

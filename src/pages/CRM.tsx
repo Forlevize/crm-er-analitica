@@ -37,7 +37,7 @@ export function CRM() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-borderSoft pb-5">
         <div>
-          <h1 className="text-xl font-semibold tracking-[-0.03em] text-textPrimary">CRM Kanban</h1>
+          <h1 className="text-xl font-semibold tracking-[-0.03em] text-textPrimary">Registro de contatos</h1>
           <p className="mt-0.5 text-sm text-textSecondary">Cards por owner com historico de interacoes e e-mails.</p>
         </div>
         <Select

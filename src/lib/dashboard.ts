@@ -9,7 +9,6 @@ const crmLabels = {
   em_contato: "Em contato",
   agendado: "Agendado",
   calibrado: "Calibrado",
-  perdido: "Perdido",
 } as const;
 
 interface DashboardMetricSources {
@@ -24,6 +23,14 @@ export function buildDashboardMetrics(
   isAdmin: boolean,
   sources: DashboardMetricSources,
 ): DashboardMetrics {
+  const allScoped = items.filter((item) => {
+    if (district && district !== "todos") {
+      return item.owner_district === district;
+    }
+
+    return true;
+  });
+
   const equipmentById = new Map(items.map((item) => [item.id, item]));
   const scoped = items.filter((item) => {
     if (!item.active) {
@@ -102,7 +109,7 @@ export function buildDashboardMetrics(
       const date = parseISO(item.data_calibracao);
       return item.realizado && getYear(date) === currentYear;
     }).length,
-    equipamentosAtivos: scoped.length,
+    equipamentosAtivos: allScoped.length,
     equipamentosVencidos: status.vencido,
     previstoPorMes,
     statusEquipamentos: [

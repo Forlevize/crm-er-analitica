@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ClipboardCheck, Pencil, RefreshCcw, ShieldAlert, Trash2 } from "lucide-react";
+import { ClipboardCheck, Download, Pencil, ShieldAlert, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
@@ -17,7 +17,8 @@ interface TabelaEquipamentosProps {
   onRequestReview: (item: EquipamentoVisao) => void;
   onManageDocuments: (item: EquipamentoVisao) => void;
   onOpenOwner: (item: EquipamentoVisao) => void;
-  onSync: () => void;
+  onUploadSpreadsheet: () => void;
+  onDownloadTemplate: () => void;
   onReset: () => void;
   currentPage: number;
   totalPages: number;
@@ -36,7 +37,8 @@ export function TabelaEquipamentos({
   onRequestReview,
   onManageDocuments,
   onOpenOwner,
-  onSync,
+  onUploadSpreadsheet,
+  onDownloadTemplate,
   onReset,
   currentPage,
   totalPages,
@@ -119,9 +121,13 @@ export function TabelaEquipamentos({
               <Trash2 className="h-4 w-4" />
               Resetar equipamentos
             </Button>
-            <Button variant="secondary" className="h-9 gap-2 px-4 text-xs" onClick={onSync}>
-              <RefreshCcw className="h-4 w-4" />
-              Sincronizar
+            <Button variant="ghost" className="h-9 gap-2 px-4 text-xs" onClick={onDownloadTemplate}>
+              <Download className="h-4 w-4" />
+              Baixar modelo
+            </Button>
+            <Button variant="secondary" className="h-9 gap-2 px-4 text-xs" onClick={onUploadSpreadsheet}>
+              <Upload className="h-4 w-4" />
+              Upload de planilha
             </Button>
           </div>
         ) : null}

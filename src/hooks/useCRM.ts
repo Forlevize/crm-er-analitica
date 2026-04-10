@@ -25,7 +25,6 @@ const columnOrder: CrmColuna[] = [
   "em_contato",
   "agendado",
   "calibrado",
-  "perdido",
 ];
 
 export function useCRM() {

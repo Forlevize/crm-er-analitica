@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ModalHistoricoCalibracoes } from "@/components/equipamentos/ModalHistoricoCalibracoes";
@@ -31,7 +31,8 @@ export function Equipamentos() {
     uploadDocumentoEquipamento,
     deleteDocumentoEquipamento,
     openDocumentoEquipamento,
-    syncEquipamentosSheet,
+    uploadEquipamentosSheet,
+    downloadModeloPlanilha,
     resetEquipamentos,
   } = useEquipamentos();
   const [selected, setSelected] = useState<EquipamentoVisao | null>(null);
@@ -44,6 +45,7 @@ export function Equipamentos() {
   const [pageSize, setPageSize] = useState(25);
   const [resetOpen, setResetOpen] = useState(false);
   const [resetPassword, setResetPassword] = useState("");
+  const spreadsheetInputRef = useRef<HTMLInputElement | null>(null);
 
   const availableOwners = useMemo(() => {
     if (role === "lider" && profile) {
@@ -183,21 +185,43 @@ export function Equipamentos() {
         onOpenOwner={(item) => {
           navigate(`/usuarios?edit=${item.owner_id}`);
         }}
-        onSync={async () => {
+        onUploadSpreadsheet={() => spreadsheetInputRef.current?.click()}
+        onDownloadTemplate={async () => {
           try {
-            const result = await syncEquipamentosSheet();
-            const message =
-              typeof result === "object" && result && "message" in result
-                ? String(result.message)
-                : "Sincronizacao concluida.";
-            toast.success(message);
+            await downloadModeloPlanilha();
+            toast.success("Modelo de planilha baixado.");
           } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Falha ao sincronizar planilha.");
+            toast.error(error instanceof Error ? error.message : "Falha ao gerar modelo da planilha.");
           }
         }}
         onReset={() => {
           setResetPassword("");
           setResetOpen(true);
+        }}
+      />
+      <input
+        ref={spreadsheetInputRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        className="hidden"
+        onChange={async (event) => {
+          const file = event.target.files?.[0];
+          event.currentTarget.value = "";
+
+          if (!file) {
+            return;
+          }
+
+          try {
+            const result = await uploadEquipamentosSheet(file);
+            const message =
+              typeof result === "object" && result && "message" in result
+                ? String(result.message)
+                : "Planilha importada com sucesso.";
+            toast.success(message);
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Falha ao importar planilha.");
+          }
         }}
       />
       {role === "admin" ? (

@@ -19,7 +19,7 @@ const labels: Record<CrmColuna, string> = {
   em_contato: "Em contato",
   agendado: "Agendado",
   calibrado: "Calibrado",
-  perdido: "Perdido",
+  perdido: "Sem contato",
 };
 
 interface KanbanBoardProps {
@@ -74,7 +74,7 @@ export function KanbanBoard({ columns, users, equipamentos, onMove, onOpen }: Ka
     >
       <div className="overflow-x-auto pb-2">
         <div className="grid min-w-max auto-cols-[272px] grid-flow-col gap-4">
-          {columns.map((column) => (
+          {columns.filter((column) => column.coluna !== "perdido").map((column) => (
             <KanbanColuna
               key={column.coluna}
               coluna={column.coluna}

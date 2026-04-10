@@ -21,7 +21,7 @@ const toneStyles: Record<CrmColuna, { dot: string; label: string; isOverBg: stri
   em_contato:       { dot: "bg-status-critico",      label: "text-status-critico",     isOverBg: "bg-status-critico/8 border-status-critico/40" },
   agendado:         { dot: "bg-status-agendado",     label: "text-status-agendado",    isOverBg: "bg-status-agendado/8 border-status-agendado/40" },
   calibrado:        { dot: "bg-status-calibrado",    label: "text-status-calibrado",   isOverBg: "bg-status-calibrado/8 border-status-calibrado/40" },
-  perdido:          { dot: "bg-veoliaRed",            label: "text-veoliaRed",          isOverBg: "bg-veoliaRed/8 border-veoliaRed/40" },
+  perdido:          { dot: "bg-[#8BADCd]",            label: "text-[#5A7A9A]",         isOverBg: "bg-[#8BADCd]/8 border-[#8BADCd]/40" },
 };
 
 export function KanbanColuna({ coluna, label, cards, onOpen, getOwnerData }: KanbanColunaProps) {
